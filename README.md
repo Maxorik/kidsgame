@@ -1,24 +1,7 @@
-# kidsgame
+Игра в слова
 
-## Project setup
-```
-npm install
-```
+Поиграть можно здесь: https://maxorik.github.io/kidsgame/
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+Внимание! Наданный момент приложение не адаптировано на мобильные телефоны/планшеты.
 
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+ТЗ на приложение: https://docs.google.com/document/d/1qP9YkhEduKNDT7zDOTQjvApHPNG5xgTVF1NMUD34Wnw/edit
