@@ -56,16 +56,26 @@ export default {
             table: false,       
             phrase: '',
             styleBoard:{        //стили по-умолчанию для поля
-                gridTemplateColumns: 'repeat(16, 5em)',
-                gridTemplateRows: 'repeat(2, 5em)',
-                width: '(16 * 5)em',
-                height: '5.5em'
+                gridTemplateColumns: '',
+                gridTemplateRows: '',
+                width: '',
+                height: '5.3em'
             },
             timerState:''
         }
     },
     
-    methods:{        
+    methods:{    
+        //формируем случайное число от 2 до 1368, проверяем, уникально ли оно в текущей сессии
+        getApi(){
+            let apiNum = Math.floor(Math.random() * Math.floor(1366))+2;
+            if(this.allApis.indexOf(apiNum) == -1){
+                this.allApis.push(apiNum);
+                return apiNum;
+            }
+            else{ this.getApi(); }
+        },
+        
         //обращаемся к апи
         getWord(){
             let cite = 'https://apidir.pfdo.ru/v1/directory-program-activities/' + this.getApi(); 
@@ -86,19 +96,20 @@ export default {
                 this.encryptWord = data.data.name.toUpperCase();
                 console.log('Посдказка: ' + this.encryptWord);      //подсказка :)
                 this.anagram = this.getAnagram(); 
-                
-                //вычисляем площадь для доски слова
-                let proportion = screen.width / 85;
-                if(this.anagram.length>proportion){
-                    this.styleBoard.gridTemplateColumns = 'repeat('+proportion+', 5em)';
-                    this.styleBoard.gridTemplateRows = 'repeat('+ Math.ceil(this.anagram.length/proportion) +', 5em)';
-                    this.styleBoard.height = Math.ceil(this.anagram.length/proportion) * 5.5 + 'em';
-                }
-                else this.styleBoard.gridTemplateColumns = 'repeat('+ this.anagram.length +', 5em)';
-                this.styleBoard.width = 'repeat('+ this.anagram.length +', 5em)';
-                
+                this.setStyleBoard(this.anagram.length);
                 this.timer('start');
             }
+        },
+        
+        //меняем площадь табла для слова
+        setStyleBoard(length){
+            let proportion = Math.ceil(screen.width / 88);
+            if(length>proportion){
+                this.styleBoard.gridTemplateColumns = 'repeat('+ proportion+', 5em)';
+                this.styleBoard.gridTemplateRows = 'repeat('+ Math.ceil(length/proportion) +', 5em)';
+                this.styleBoard.height = Math.ceil(length/proportion) * 5 + 'em';
+            }
+            else this.styleBoard.gridTemplateColumns = 'repeat('+ length +', 5em)';
         },
         
         //перемешиваем буквы в слове
@@ -107,16 +118,6 @@ export default {
             a = a.split('').sort(() => Math.random() - 0.5);    //преобразуем в массив и перемешиваем
             a.forEach(function(item, i) { if (item == ' ') a[i] = '_'; });  //заменяем пробелы на символ _
             return a;   
-        },
-        
-        //формируем случайное число от 2 до 1368, проверяем, уникально ли оно в текущей сессии
-        getApi(){
-            let apiNum = Math.floor(Math.random() * Math.floor(1366))+2;
-            if(this.allApis.indexOf(apiNum) == -1){
-                this.allApis.push(apiNum);
-                return apiNum;
-            }
-            else{ this.getApi(); }
         },
         
         //таймер времени угадывания слова
@@ -137,7 +138,6 @@ export default {
         
         },
 
-        
         //пользователь выбрал букву
         chooseLetter(e){
             let t = e.target;
@@ -260,12 +260,11 @@ export default {
         
         .game__wordSpot{
             width:96%;
-            height: 14%;
             border: 2px solid #fc7f1b;
             border-radius: 20px;
             margin:auto;
             background: beige;
-            display: grid;
+            display: grid;  
         }
         
         .game__board{
