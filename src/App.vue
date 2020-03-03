@@ -43,42 +43,45 @@ div
 
 export default {
     name: 'App',
-    data(){
-        return{
-            encryptWord:'',     //слово, которое мы получили от апи
-            anagram:[],         //массив - буквы вперемешку
-            userWord:[],        //массив - буквы, которые выбирает пользователь; буква удаляется из anagram
-            api:'',             //текущий номер апи
-            allApis:[],         //все апи в текущей сессии
-            records:[],         //таблица рекордов
-            time:0,             //время угадывания
-            endgame: false,     //все буквы выбраны
+    data() {
+        return {
+            encryptWord: '',     // слово, которое мы получили от апи
+            anagram: [],         // массив - буквы вперемешку
+            userWord: [],        // массив - буквы, которые выбирает пользователь; буква удаляется из anagram
+            api: '',             // текущий номер апи
+            allApis: [],         // все апи в текущей сессии
+            records: [],         // таблица рекордов
+            time: 0,             // время угадывания
+            endgame: false,      // все буквы выбраны
             table: false,       
             phrase: '',
-            styleBoard:{        //стили по-умолчанию для поля
+            styleBoard: {        // стили по-умолчанию для поля
                 gridTemplateColumns: '',
                 gridTemplateRows: '',
                 width: '',
                 height: '5.3em'
             },
-            timerState:''
+            timerState: ''
         }
     },
     
-    methods:{    
-        //формируем случайное число от 2 до 1368, проверяем, уникально ли оно в текущей сессии
-        getApi(){
-            let apiNum = Math.floor(Math.random() * Math.floor(1366))+2;
-            if(this.allApis.indexOf(apiNum) == -1){
+    methods: {    
+        // формируем случайное число от 2 до 1368, проверяем, уникально ли оно в текущей сессии
+        getNumberForApi() {
+            const apiNum = Math.floor(Math.random() * Math.floor(1366)) + 2;
+            
+            if (this.allApis.indexOf(apiNum) === -1){
                 this.allApis.push(apiNum);
                 return apiNum;
+            } else {
+                this.getNumberForApi();
             }
-            else{ this.getApi(); }
         },
         
-        //обращаемся к апи
-        getWord(){
-            let cite = 'https://apidir.pfdo.ru/v1/directory-program-activities/' + this.getApi(); 
+        // обращаемся к апи
+        getWord() {
+            const cite = 'https://apidir.pfdo.ru/v1/directory-program-activities/' + this.getNumberForApi();
+            
             fetch(cite)
             .then(res => res.ok ? res : Promise.reject(res))
             .then(res => {
@@ -86,100 +89,106 @@ export default {
             }).then(this.getPhrase);
         },
         
-        //если мы успешно обратились к апи, получаем фразу (слово из справочника “Виды деятельности”); 
-        getPhrase(data){
-            if(data.result_message == 'Запись не найдена'){
+        // если мы успешно обратились к апи, получаем фразу (слово из справочника “Виды деятельности”); 
+        getPhrase(data) {
+            if (data.result_message === 'Запись не найдена'){
                 this.getWord();
-            }
-            
-            else{
+            } else {
                 this.encryptWord = data.data.name.toUpperCase();
-                console.log('Посдказка: ' + this.encryptWord);      //подсказка :)
-                this.anagram = this.getAnagram(); 
+                
+                //подсказка :)
+                console.log('Посдказка: ' + this.encryptWord);
+                this.anagram = this.getAnagram();
                 this.setStyleBoard(this.anagram.length);
                 this.timer('start');
             }
         },
         
-        //меняем площадь табла для слова
-        setStyleBoard(length){
-            let proportion = Math.ceil(screen.width / 88);
-            if(length>proportion){
-                this.styleBoard.gridTemplateColumns = 'repeat('+ proportion+', 5em)';
-                this.styleBoard.gridTemplateRows = 'repeat('+ Math.ceil(length/proportion) +', 5em)';
+        // меняем площадь табла для слова
+        setStyleBoard(length) {
+            const proportion = Math.ceil(screen.width / 88);
+            
+            if (length>proportion) {
+                this.styleBoard.gridTemplateColumns = 'repeat(' + proportion + ', 5em)';
+                this.styleBoard.gridTemplateRows = 'repeat(' + Math.ceil(length/proportion) + ', 5em)';
                 this.styleBoard.height = Math.ceil(length/proportion) * 5 + 'em';
-            }
-            else this.styleBoard.gridTemplateColumns = 'repeat('+ length +', 5em)';
+            } else this.styleBoard.gridTemplateColumns = 'repeat(' + length + ', 5em)';
         },
         
-        //перемешиваем буквы в слове
-        getAnagram(){
-            let a = this.encryptWord;   //запоминаем слово
-            a = a.split('').sort(() => Math.random() - 0.5);    //преобразуем в массив и перемешиваем
-            a.forEach(function(item, i) { if (item == ' ') a[i] = '_'; });  //заменяем пробелы на символ _
-            return a;   
+        // перемешиваем буквы в слове
+        getAnagram() {
+            // запоминаем слово
+            let anagram = this.encryptWord;
+            
+            // преобразуем в массив и перемешиваем
+            anagram = anagram.split('').sort(() => Math.random() - 0.5);
+            
+            // заменяем пробелы на символ _
+            anagram.forEach(function(item, i) { if (item === ' ') anagram[i] = '_'; });
+            return anagram;
         },
         
-        //таймер времени угадывания слова
-        timer(val){
+        // таймер времени угадывания слова
+        timer(val) {
+            const timeStart = new Date().getTime();
             this.timerState = val;
-            let timeStart = new Date().getTime();
+            
             let tick = setInterval(() => {
                 this.time = getDifferent(timeStart);
-                if(this.timerState == 'stop'){
+                if (this.timerState === 'stop'){
+                    this.time = 0;
                     clearInterval(tick);
                 }
             }, 1000);
             
-            function getDifferent(t){
-                let timeEnd = new Date().getTime();
-                return parseInt((timeEnd - t)/1000);
+            function getDifferent(t) {
+                const timeEnd = new Date().getTime();
+                return parseInt((timeEnd - t) / 1000);
             }
         
         },
 
-        //пользователь выбрал букву
-        chooseLetter(e){
-            let t = e.target;
+        // пользователь выбрал букву
+        chooseLetter(e) {
+            const t = e.target;
+            const toDelete = this.anagram.indexOf(t.textContent);
             this.userWord.push(t.textContent);
-            let toDelete = this.anagram.indexOf(t.textContent);
             this.anagram.splice(toDelete, 1);
-            if(this.anagram.length == 0){
+            
+            if (this.anagram.length === 0){
                 this.gameStop();
             }
         },
         
-        //пользователь выбрал все буквы
-        gameStop(){
+        // пользователь выбрал все буквы
+        gameStop() {
             this.endgame = true;
             this.timer('stop');
-            if(this.userWord.join('') == this.encryptWord){
+            
+            if (this.userWord.join('') === this.encryptWord) {
                 this.records.push({
                     id: this.records.length + 1,
                     word: this.encryptWord,
                     time: this.time
                 });
                 this.phrase = 'Вы выиграли! Повторить?';
-                
-            }
-            else{
+            } else {
                 this.phrase = 'Буквы кончились... попробовать еще раз?';
             }
-            this.time=0;
         },
         
-        //сброс игры
-        resetGame(){
+        // сброс игры
+        resetGame() {
             this.anagram = this.getAnagram();
             this.userWord = [];
+            this.timer('start');
         },
         
-        //новая игра
-        newGame(){
-            if(this.phrase == 'Буквы кончились... попробовать еще раз?'){
+        // новая игра
+        newGame() {
+            if (this.anagram.length === 0 && this.userWord.join('') !== this.encryptWord){
                 this.resetGame();
-            }
-            else{
+            } else {
                 this.playAgain();
             }
             
@@ -187,8 +196,8 @@ export default {
             this.endgame = false;
         },
         
-        //сыграть еще раз
-        playAgain(){
+        // сыграть еще раз
+        playAgain() {
             this.table = false;
             this.encryptWord = '';
             this.anagram = [];
@@ -197,19 +206,19 @@ export default {
             this.getWord();
         },
         
-        //показать таблицу с результатами
-        showTable(){
+        // показать таблицу с результатами
+        showTable() {
             this.table = true;
             this.endgame = false;
         }
     },
     
-    mounted(){
-        //при загрузке приложения мы сразу обращаемся к апи и получаем слово
+    mounted() {
+        // при загрузке приложения мы сразу обращаемся к апи и получаем слово
         this.newGame();
     }
-    
 }
+    
 </script>
 
 <style lang="scss">
